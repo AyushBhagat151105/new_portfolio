@@ -64,6 +64,7 @@ export const hero = sqliteTable('hero', {
   title: text('title').notNull(),
   subtitle: text('subtitle'),
   description: text('description'),
+  image: text('image'), // Profile photo URL
   ctaText: text('cta_text'),
   ctaUrl: text('cta_url'),
   updatedAt: integer('updatedAt', { mode: 'timestamp' }).$defaultFn(() => new Date()),

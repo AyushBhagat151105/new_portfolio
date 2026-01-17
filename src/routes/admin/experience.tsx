@@ -1,5 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,28 +24,37 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
+import { experienceSchema, type ExperienceFormData } from '@/lib/schemas'
 import type { Experience } from '@/db/schema'
 
 export const Route = createFileRoute('/admin/experience')({
     component: ExperienceManager,
 })
 
-const emptyExperience: Partial<Experience> = {
-    company: '',
-    role: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    location: '',
-    order: 0,
-}
-
 function ExperienceManager() {
     const [experiences, setExperiences] = useState<Experience[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [dialogOpen, setDialogOpen] = useState(false)
-    const [editingExp, setEditingExp] = useState<Partial<Experience>>(emptyExperience)
+    const [editingId, setEditingId] = useState<number | null>(null)
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm<ExperienceFormData>({
+        resolver: zodResolver(experienceSchema),
+        defaultValues: {
+            company: '',
+            role: '',
+            description: '',
+            startDate: '',
+            endDate: '',
+            location: '',
+            order: 0,
+        },
+    })
 
     useEffect(() => {
         fetchExperiences()
@@ -61,24 +72,24 @@ function ExperienceManager() {
         }
     }
 
-    async function handleSave() {
+    async function onSubmit(data: ExperienceFormData) {
         setIsSaving(true)
 
         try {
-            const method = editingExp.id ? 'PUT' : 'POST'
-            const url = editingExp.id
-                ? `/api/admin/experience?id=${editingExp.id}`
+            const method = editingId ? 'PUT' : 'POST'
+            const url = editingId
+                ? `/api/admin/experience?id=${editingId}`
                 : '/api/admin/experience'
 
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(editingExp),
+                body: JSON.stringify(data),
             })
 
             if (res.ok) {
                 setDialogOpen(false)
-                setEditingExp(emptyExperience)
+                resetForm()
                 fetchExperiences()
             }
         } catch (error) {
@@ -100,13 +111,35 @@ function ExperienceManager() {
     }
 
     function openEdit(exp: Experience) {
-        setEditingExp(exp)
+        setEditingId(exp.id)
+        reset({
+            company: exp.company || '',
+            role: exp.role || '',
+            description: exp.description || '',
+            startDate: exp.startDate || '',
+            endDate: exp.endDate || '',
+            location: exp.location || '',
+            order: exp.order || 0,
+        })
         setDialogOpen(true)
     }
 
     function openNew() {
-        setEditingExp(emptyExperience)
+        resetForm()
         setDialogOpen(true)
+    }
+
+    function resetForm() {
+        setEditingId(null)
+        reset({
+            company: '',
+            role: '',
+            description: '',
+            startDate: '',
+            endDate: '',
+            location: '',
+            order: 0,
+        })
     }
 
     if (isLoading) {
@@ -134,60 +167,67 @@ function ExperienceManager() {
                     <DialogContent className="bg-zinc-900 border-zinc-700 max-w-2xl">
                         <DialogHeader>
                             <DialogTitle className="text-white">
-                                {editingExp.id ? 'Edit Experience' : 'New Experience'}
+                                {editingId ? 'Edit Experience' : 'New Experience'}
                             </DialogTitle>
                             <DialogDescription className="text-zinc-400">
                                 Add your work experience details.
                             </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 py-4">
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm text-zinc-300">Company</label>
+                                    <label className="text-sm text-zinc-300">Company *</label>
                                     <Input
-                                        value={editingExp.company || ''}
-                                        onChange={(e) => setEditingExp({ ...editingExp, company: e.target.value })}
                                         placeholder="Acme Inc."
                                         className="bg-zinc-800 border-zinc-700 text-white"
+                                        {...register('company')}
                                     />
+                                    {errors.company && (
+                                        <p className="text-sm text-red-400">{errors.company.message}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-sm text-zinc-300">Role</label>
+                                    <label className="text-sm text-zinc-300">Role *</label>
                                     <Input
-                                        value={editingExp.role || ''}
-                                        onChange={(e) => setEditingExp({ ...editingExp, role: e.target.value })}
                                         placeholder="Senior Developer"
                                         className="bg-zinc-800 border-zinc-700 text-white"
+                                        {...register('role')}
                                     />
+                                    {errors.role && (
+                                        <p className="text-sm text-red-400">{errors.role.message}</p>
+                                    )}
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <label className="text-sm text-zinc-300">Description</label>
                                 <Textarea
-                                    value={editingExp.description || ''}
-                                    onChange={(e) => setEditingExp({ ...editingExp, description: e.target.value })}
                                     placeholder="Describe your responsibilities and achievements..."
                                     rows={4}
                                     className="bg-zinc-800 border-zinc-700 text-white"
+                                    {...register('description')}
                                 />
+                                {errors.description && (
+                                    <p className="text-sm text-red-400">{errors.description.message}</p>
+                                )}
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
-                                    <label className="text-sm text-zinc-300">Start Date (YYYY-MM)</label>
+                                    <label className="text-sm text-zinc-300">Start Date * (YYYY-MM)</label>
                                     <Input
-                                        value={editingExp.startDate || ''}
-                                        onChange={(e) => setEditingExp({ ...editingExp, startDate: e.target.value })}
                                         placeholder="2022-01"
                                         className="bg-zinc-800 border-zinc-700 text-white"
+                                        {...register('startDate')}
                                     />
+                                    {errors.startDate && (
+                                        <p className="text-sm text-red-400">{errors.startDate.message}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm text-zinc-300">End Date (leave empty for present)</label>
                                     <Input
-                                        value={editingExp.endDate || ''}
-                                        onChange={(e) => setEditingExp({ ...editingExp, endDate: e.target.value })}
                                         placeholder="2024-01 or leave empty"
                                         className="bg-zinc-800 border-zinc-700 text-white"
+                                        {...register('endDate')}
                                     />
                                 </div>
                             </div>
@@ -195,32 +235,33 @@ function ExperienceManager() {
                                 <div className="space-y-2">
                                     <label className="text-sm text-zinc-300">Location</label>
                                     <Input
-                                        value={editingExp.location || ''}
-                                        onChange={(e) => setEditingExp({ ...editingExp, location: e.target.value })}
                                         placeholder="San Francisco, CA"
                                         className="bg-zinc-800 border-zinc-700 text-white"
+                                        {...register('location')}
                                     />
+                                    {errors.location && (
+                                        <p className="text-sm text-red-400">{errors.location.message}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm text-zinc-300">Order</label>
                                     <Input
                                         type="number"
-                                        value={editingExp.order || 0}
-                                        onChange={(e) => setEditingExp({ ...editingExp, order: Number(e.target.value) })}
                                         className="bg-zinc-800 border-zinc-700 text-white"
+                                        {...register('order', { valueAsNumber: true })}
                                     />
                                 </div>
                             </div>
-                        </div>
-                        <DialogFooter>
-                            <Button
-                                onClick={handleSave}
-                                disabled={isSaving}
-                                className="bg-white text-zinc-900 hover:bg-zinc-200"
-                            >
-                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Experience'}
-                            </Button>
-                        </DialogFooter>
+                            <DialogFooter>
+                                <Button
+                                    type="submit"
+                                    disabled={isSaving}
+                                    className="bg-white text-zinc-900 hover:bg-zinc-200"
+                                >
+                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save Experience'}
+                                </Button>
+                            </DialogFooter>
+                        </form>
                     </DialogContent>
                 </Dialog>
             </div>

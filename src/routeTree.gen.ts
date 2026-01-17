@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as ApiUploadRouteImport } from './routes/api/upload'
 import { Route as ApiPortfolioRouteImport } from './routes/api/portfolio'
 import { Route as AdminSkillsRouteImport } from './routes/admin/skills'
 import { Route as AdminProjectsRouteImport } from './routes/admin/projects'
@@ -42,6 +43,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const ApiUploadRoute = ApiUploadRouteImport.update({
+  id: '/api/upload',
+  path: '/api/upload',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPortfolioRoute = ApiPortfolioRouteImport.update({
   id: '/api/portfolio',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/skills': typeof AdminSkillsRoute
   '/api/portfolio': typeof ApiPortfolioRoute
+  '/api/upload': typeof ApiUploadRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/$section': typeof ApiAdminSectionRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/skills': typeof AdminSkillsRoute
   '/api/portfolio': typeof ApiPortfolioRoute
+  '/api/upload': typeof ApiUploadRoute
   '/admin': typeof AdminIndexRoute
   '/api/admin/$section': typeof ApiAdminSectionRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -130,6 +138,7 @@ export interface FileRoutesById {
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/skills': typeof AdminSkillsRoute
   '/api/portfolio': typeof ApiPortfolioRoute
+  '/api/upload': typeof ApiUploadRoute
   '/admin/': typeof AdminIndexRoute
   '/api/admin/$section': typeof ApiAdminSectionRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
@@ -147,6 +156,7 @@ export interface FileRouteTypes {
     | '/admin/projects'
     | '/admin/skills'
     | '/api/portfolio'
+    | '/api/upload'
     | '/admin/'
     | '/api/admin/$section'
     | '/api/auth/$'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/admin/projects'
     | '/admin/skills'
     | '/api/portfolio'
+    | '/api/upload'
     | '/admin'
     | '/api/admin/$section'
     | '/api/auth/$'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/admin/projects'
     | '/admin/skills'
     | '/api/portfolio'
+    | '/api/upload'
     | '/admin/'
     | '/api/admin/$section'
     | '/api/auth/$'
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   ApiPortfolioRoute: typeof ApiPortfolioRoute
+  ApiUploadRoute: typeof ApiUploadRoute
   ApiAdminSectionRoute: typeof ApiAdminSectionRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
@@ -219,6 +232,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/api/upload': {
+      id: '/api/upload'
+      path: '/api/upload'
+      fullPath: '/api/upload'
+      preLoaderRoute: typeof ApiUploadRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/portfolio': {
       id: '/api/portfolio'
@@ -313,6 +333,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   ApiPortfolioRoute: ApiPortfolioRoute,
+  ApiUploadRoute: ApiUploadRoute,
   ApiAdminSectionRoute: ApiAdminSectionRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }

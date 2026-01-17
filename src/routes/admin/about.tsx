@@ -1,10 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Save, Loader2 } from 'lucide-react'
+import { aboutSchema, type AboutFormData } from '@/lib/schemas'
 import type { About } from '@/db/schema'
 
 export const Route = createFileRoute('/admin/about')({
@@ -12,15 +15,25 @@ export const Route = createFileRoute('/admin/about')({
 })
 
 function AboutManager() {
-    const [about, setAbout] = useState<Partial<About>>({
-        title: '',
-        description: '',
-        image: '',
-        resumeUrl: '',
-    })
+    const [aboutId, setAboutId] = useState<number | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+    const {
+        register,
+        handleSubmit,
+        reset,
+        formState: { errors },
+    } = useForm<AboutFormData>({
+        resolver: zodResolver(aboutSchema),
+        defaultValues: {
+            title: '',
+            description: '',
+            image: '',
+            resumeUrl: '',
+        },
+    })
 
     useEffect(() => {
         fetchAbout()
@@ -29,9 +42,16 @@ function AboutManager() {
     async function fetchAbout() {
         try {
             const res = await fetch('/api/admin/about')
-            const data = await res.json()
+            const data: About[] = await res.json()
             if (data.length > 0) {
-                setAbout(data[0])
+                const about = data[0]
+                setAboutId(about.id)
+                reset({
+                    title: about.title || '',
+                    description: about.description || '',
+                    image: about.image || '',
+                    resumeUrl: about.resumeUrl || '',
+                })
             }
         } catch (error) {
             console.error('Failed to fetch about:', error)
@@ -40,24 +60,24 @@ function AboutManager() {
         }
     }
 
-    async function handleSave() {
+    async function onSubmit(data: AboutFormData) {
         setIsSaving(true)
         setMessage(null)
 
         try {
-            const method = about.id ? 'PUT' : 'POST'
-            const url = about.id ? `/api/admin/about?id=${about.id}` : '/api/admin/about'
+            const method = aboutId ? 'PUT' : 'POST'
+            const url = aboutId ? `/api/admin/about?id=${aboutId}` : '/api/admin/about'
 
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(about),
+                body: JSON.stringify(data),
             })
 
             if (res.ok) {
-                const data = await res.json()
-                if (data.length > 0) {
-                    setAbout(data[0])
+                const result = await res.json()
+                if (result.length > 0) {
+                    setAboutId(result[0].id)
                 }
                 setMessage({ type: 'success', text: 'About section saved successfully!' })
             } else {
@@ -94,71 +114,81 @@ function AboutManager() {
                         Share your story and experience
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-sm text-zinc-300">Section Title</label>
-                        <Input
-                            value={about.title || ''}
-                            onChange={(e) => setAbout({ ...about, title: e.target.value })}
-                            placeholder="About Me"
-                            className="bg-zinc-900 border-zinc-700 text-white"
-                        />
-                    </div>
+                <CardContent>
+                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-sm text-zinc-300">Section Title</label>
+                            <Input
+                                placeholder="About Me"
+                                className="bg-zinc-900 border-zinc-700 text-white"
+                                {...register('title')}
+                            />
+                            {errors.title && (
+                                <p className="text-sm text-red-400">{errors.title.message}</p>
+                            )}
+                        </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm text-zinc-300">Description</label>
-                        <Textarea
-                            value={about.description || ''}
-                            onChange={(e) => setAbout({ ...about, description: e.target.value })}
-                            placeholder="Write about yourself, your journey, and what you're passionate about..."
-                            rows={8}
-                            className="bg-zinc-900 border-zinc-700 text-white"
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-zinc-300">Description *</label>
+                            <Textarea
+                                placeholder="Write about yourself, your journey, and what you're passionate about..."
+                                rows={8}
+                                className="bg-zinc-900 border-zinc-700 text-white"
+                                {...register('description')}
+                            />
+                            {errors.description && (
+                                <p className="text-sm text-red-400">{errors.description.message}</p>
+                            )}
+                        </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm text-zinc-300">Profile Image URL</label>
-                        <Input
-                            value={about.image || ''}
-                            onChange={(e) => setAbout({ ...about, image: e.target.value })}
-                            placeholder="https://example.com/your-photo.jpg"
-                            className="bg-zinc-900 border-zinc-700 text-white"
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-zinc-300">Profile Image URL</label>
+                            <Input
+                                placeholder="https://example.com/your-photo.jpg"
+                                className="bg-zinc-900 border-zinc-700 text-white"
+                                {...register('image')}
+                            />
+                            {errors.image && (
+                                <p className="text-sm text-red-400">{errors.image.message}</p>
+                            )}
+                        </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm text-zinc-300">Resume URL</label>
-                        <Input
-                            value={about.resumeUrl || ''}
-                            onChange={(e) => setAbout({ ...about, resumeUrl: e.target.value })}
-                            placeholder="https://example.com/resume.pdf"
-                            className="bg-zinc-900 border-zinc-700 text-white"
-                        />
-                    </div>
+                        <div className="space-y-2">
+                            <label className="text-sm text-zinc-300">Resume URL</label>
+                            <Input
+                                placeholder="https://example.com/resume.pdf"
+                                className="bg-zinc-900 border-zinc-700 text-white"
+                                {...register('resumeUrl')}
+                            />
+                            {errors.resumeUrl && (
+                                <p className="text-sm text-red-400">{errors.resumeUrl.message}</p>
+                            )}
+                        </div>
 
-                    {message && (
-                        <p className={`text-sm ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                            {message.text}
-                        </p>
-                    )}
-
-                    <Button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="bg-white text-zinc-900 hover:bg-zinc-200"
-                    >
-                        {isSaving ? (
-                            <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="h-4 w-4 mr-2" />
-                                Save Changes
-                            </>
+                        {message && (
+                            <p className={`text-sm ${message.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                                {message.text}
+                            </p>
                         )}
-                    </Button>
+
+                        <Button
+                            type="submit"
+                            disabled={isSaving}
+                            className="bg-white text-zinc-900 hover:bg-zinc-200"
+                        >
+                            {isSaving ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="h-4 w-4 mr-2" />
+                                    Save Changes
+                                </>
+                            )}
+                        </Button>
+                    </form>
                 </CardContent>
             </Card>
         </div>
