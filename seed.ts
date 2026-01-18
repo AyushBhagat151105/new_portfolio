@@ -1,49 +1,26 @@
 import { db } from './src/db'
-import { user, hero, about, projects, skills, experience, contact } from './src/db/schema'
-import { eq } from 'drizzle-orm'
+import { hero, about, projects, skills, experience, contact } from './src/db/schema'
 
-// This script creates an initial admin user and seeds portfolio data
-// Run it ONCE with: bun run seed.ts (while dev server is running)
-
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!
-const ADMIN_NAME = process.env.ADMIN_NAME!
+// This script seeds the database on first deployment
+// Run with: bun run seed
 
 async function seed() {
   console.log('🌱 Seeding database...')
+  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`)
 
-  // Check if admin already exists
-  const existingUser = await db.select().from(user).where(eq(user.email, ADMIN_EMAIL)).limit(1)
-
-  if (existingUser.length === 0) {
-    // Create admin user via the auth API
-    const response = await fetch('http://localhost:3000/api/auth/sign-up/email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: ADMIN_NAME,
-        email: ADMIN_EMAIL,
-        password: ADMIN_PASSWORD,
-      }),
-    })
-
-    if (response.ok) {
-      console.log('✅ Admin user created successfully!')
-      console.log(`   Email: ${ADMIN_EMAIL}`)
-      console.log(`   Password: ${ADMIN_PASSWORD}`)
-    } else {
-      const error = await response.text()
-      console.log('❌ Failed to create admin user:', error)
+  try {
+    // Check if already seeded
+    const existingHero = await db.select().from(hero).limit(1)
+    if (existingHero.length > 0) {
+      console.log('ℹ️  Database already seeded, skipping...')
+      return
     }
-  } else {
-    console.log('ℹ️  Admin user already exists, skipping...')
-  }
 
-  // Seed Hero section
-  const existingHero = await db.select().from(hero).limit(1)
-  if (existingHero.length === 0) {
+    console.log('📦 Seeding fresh database...')
+
+    // Seed Hero section
     await db.insert(hero).values({
-      title: "Hii I'm Ayush Bhagat",
+      title: "Hi, I'm Ayush Bhagat",
       subtitle: 'Full Stack Developer',
       description:
         'Frontend developer evolving into a full-stack engineer with Next.js, MongoDB, and Prisma — passionate about crafting elegant UIs with Tailwind and building seamless web experiences with React.',
@@ -51,11 +28,8 @@ async function seed() {
       ctaUrl: '#projects',
     })
     console.log('✅ Hero section seeded')
-  }
 
-  // Seed About section
-  const existingAbout = await db.select().from(about).limit(1)
-  if (existingAbout.length === 0) {
+    // Seed About section
     await db.insert(about).values({
       title: 'About Me',
       description: `I'm a passionate full-stack developer with a keen eye for creating elegant solutions in the least amount of time. I specialize in building responsive web applications using modern technologies.
@@ -75,11 +49,8 @@ What I Do:
       resumeUrl: '',
     })
     console.log('✅ About section seeded')
-  }
 
-  // Seed Projects
-  const existingProjects = await db.select().from(projects).limit(1)
-  if (existingProjects.length === 0) {
+    // Seed Projects
     await db.insert(projects).values([
       {
         title: 'Own LeetCode',
@@ -113,11 +84,8 @@ What I Do:
       },
     ])
     console.log('✅ Projects seeded')
-  }
 
-  // Seed Skills
-  const existingSkills = await db.select().from(skills).limit(1)
-  if (existingSkills.length === 0) {
+    // Seed Skills
     await db.insert(skills).values([
       { name: 'React', category: 'Frontend', proficiency: 90, order: 1 },
       { name: 'Next.js', category: 'Frontend', proficiency: 85, order: 2 },
@@ -129,11 +97,8 @@ What I Do:
       { name: 'Git', category: 'Tools', proficiency: 85, order: 8 },
     ])
     console.log('✅ Skills seeded')
-  }
 
-  // Seed Experience
-  const existingExp = await db.select().from(experience).limit(1)
-  if (existingExp.length === 0) {
+    // Seed Experience
     await db.insert(experience).values([
       {
         company: 'Freelance',
@@ -157,32 +122,36 @@ What I Do:
       },
     ])
     console.log('✅ Experience seeded')
-  }
 
-  // Seed or Update Contact (with social links)
-  const existingContact = await db.select().from(contact).limit(1)
-  const contactData = {
-    email: 'ayushnbhagat151105@gmail.com',
-    phone: '',
-    location: 'India',
-    github: 'https://github.com/AyushBhagat151105',
-    linkedin: 'https://www.linkedin.com/in/ayush-bhagat-99b7b82b3/',
-    twitter: 'https://x.com/AyushBhaga1511',
-    website: 'https://www.ayushbhagat.live/',
-  }
-  
-  if (existingContact.length === 0) {
-    await db.insert(contact).values(contactData)
+    // Seed Contact
+    await db.insert(contact).values({
+      email: 'ayushnbhagat151105@gmail.com',
+      phone: '',
+      location: 'India',
+      github: 'https://github.com/AyushBhagat151105',
+      linkedin: 'https://www.linkedin.com/in/ayush-bhagat-99b7b82b3/',
+      twitter: 'https://x.com/AyushBhaga1511',
+      website: 'https://www.ayushbhagat.live/',
+    })
     console.log('✅ Contact info seeded')
-  } else {
-    // Update existing contact with social links
-    await db.update(contact).set(contactData).where(eq(contact.id, existingContact[0].id))
-    console.log('✅ Contact info updated with social links')
-  }
 
-  console.log('\n🎉 Database seeding complete!')
-  console.log('\n⚠️  IMPORTANT: Change your password after first login!')
-  process.exit(0)
+    console.log('\n🎉 Database seeding complete!')
+  } catch (error) {
+    console.error('❌ Seeding error:', error)
+    throw error
+  }
 }
 
-seed().catch(console.error)
+// Export for use as module
+export { seed }
+
+// Run if executed directly
+seed()
+  .then(() => {
+    console.log('✅ Seed completed successfully')
+    process.exit(0)
+  })
+  .catch((error) => {
+    console.error('❌ Seed failed:', error)
+    process.exit(1)
+  })
