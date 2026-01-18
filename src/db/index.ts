@@ -1,13 +1,10 @@
-import { createClient } from '@libsql/client'
-import { drizzle } from 'drizzle-orm/libsql'
+import { drizzle } from 'drizzle-orm/node-postgres'
+import pg from 'pg'
 import * as schema from './schema'
+import 'dotenv/config'
 
-const url = process.env.TURSO_DATABASE_URL || 'file:./data/portfolio.db'
-const authToken = process.env.TURSO_AUTH_TOKEN
-
-const client = createClient({
-  url,
-  authToken,
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
 })
 
-export const db = drizzle(client, { schema })
+export const db = drizzle(pool, { schema })
