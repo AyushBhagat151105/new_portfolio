@@ -5,9 +5,9 @@ import { eq } from 'drizzle-orm'
 // This script creates an initial admin user and seeds portfolio data
 // Run it ONCE with: bun run seed.ts (while dev server is running)
 
-const ADMIN_EMAIL = 'ayushnbhagat151105@gmail.com'
-const ADMIN_PASSWORD = 'Ayush@TheAdmin151105'
-const ADMIN_NAME = 'Ayush Bhagat'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL!
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD!
+const ADMIN_NAME = process.env.ADMIN_NAME!
 
 async function seed() {
   console.log('🌱 Seeding database...')

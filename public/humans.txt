@@ -1,0 +1,14 @@
+/* TEAM */
+Developer: Ayush Bhagat
+Site: https://ayushbhagat.live
+Twitter: @ayushbhagat
+GitHub: AyushBhagat151105
+Location: India
+
+/* SITE */
+Last update: 2026/01/18
+Standards: HTML5, CSS3, ES6+
+Components: React, TypeScript, TanStack Router
+Styling: Tailwind CSS
+Animation: Framer Motion
+Hosting: Vercel

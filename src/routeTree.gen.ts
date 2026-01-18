@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,6 +25,11 @@ import { Route as AdminAboutRouteImport } from './routes/admin/about'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as ApiAdminSectionRouteImport } from './routes/api/admin/$section'
 
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/projects': typeof ProjectsRoute
   '/admin/about': typeof AdminAboutRoute
   '/admin/contact': typeof AdminContactRoute
   '/admin/experience': typeof AdminExperienceRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/projects': typeof ProjectsRoute
   '/admin/about': typeof AdminAboutRoute
   '/admin/contact': typeof AdminContactRoute
   '/admin/experience': typeof AdminExperienceRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
+  '/projects': typeof ProjectsRoute
   '/admin/about': typeof AdminAboutRoute
   '/admin/contact': typeof AdminContactRoute
   '/admin/experience': typeof AdminExperienceRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/projects'
     | '/admin/about'
     | '/admin/contact'
     | '/admin/experience'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/projects'
     | '/admin/about'
     | '/admin/contact'
     | '/admin/experience'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/login'
+    | '/projects'
     | '/admin/about'
     | '/admin/contact'
     | '/admin/experience'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ProjectsRoute: typeof ProjectsRoute
   ApiPortfolioRoute: typeof ApiPortfolioRoute
   ApiUploadRoute: typeof ApiUploadRoute
   ApiAdminSectionRoute: typeof ApiAdminSectionRoute
@@ -205,6 +218,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -332,6 +352,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
+  ProjectsRoute: ProjectsRoute,
   ApiPortfolioRoute: ApiPortfolioRoute,
   ApiUploadRoute: ApiUploadRoute,
   ApiAdminSectionRoute: ApiAdminSectionRoute,
