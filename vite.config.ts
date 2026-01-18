@@ -15,6 +15,7 @@ const config = defineConfig({
     tailwindcss(),
     tanstackStart(),
     viteReact(),
+    
   ],
 })
 
