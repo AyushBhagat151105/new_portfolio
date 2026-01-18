@@ -2,8 +2,12 @@ import { createClient } from '@libsql/client'
 import { drizzle } from 'drizzle-orm/libsql'
 import * as schema from './schema'
 
+const url = process.env.TURSO_DATABASE_URL || 'file:./data/portfolio.db'
+const authToken = process.env.TURSO_AUTH_TOKEN
+
 const client = createClient({
-  url: 'file:./data/portfolio.db',
+  url,
+  authToken,
 })
 
 export const db = drizzle(client, { schema })
